@@ -3,48 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Foto ke Arsa Cloud</title>
+    <title>Arsa Cloud - Upload & History</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f2f5; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
-        h2 { color: #1a73e8; margin-bottom: 20px; }
-        #upload-form { border: 2px dashed #1a73e8; padding: 40px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; position: relative; }
-        #upload-form:hover { background: #f8fbff; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
+        h2 { color: #1a73e8; }
+        #upload-area { border: 2px dashed #1a73e8; padding: 30px; border-radius: 10px; cursor: pointer; position: relative; margin-bottom: 20px; }
+        #upload-area:hover { background: #f8fbff; }
         input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        #status { margin-top: 15px; font-weight: bold; color: #555; }
-        #result-link { margin-top: 15px; display: none; word-break: break-all; padding: 10px; background: #e8f0fe; border-radius: 5px; font-size: 14px; }
-        .btn-copy { margin-top: 10px; padding: 8px 15px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer; display: none; }
+        #status { font-weight: bold; margin: 10px 0; color: #555; }
+        
+        /* Gaya Daftar Foto */
+        .history-section { width: 100%; max-width: 500px; margin-top: 30px; }
+        .history-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; border-bottom: 2px solid #1a73e8; display: inline-block; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+        .thumb-container { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background: #eee; aspect-ratio: 1/1; }
+        .thumb-container img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.3s; }
+        .thumb-container img:hover { transform: scale(1.1); }
+        .btn-del { position: absolute; top: 2px; right: 2px; background: rgba(231, 76, 60, 0.8); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>Upload Foto Arsa</h2>
-    <div id="upload-form">
-        <p id="text-prompt">Klik atau Seret Foto ke Sini</p>
+    <div id="upload-area">
+        <p>Klik/Drop foto di sini untuk simpan permanen</p>
         <input type="file" id="fileInput" accept="image/*">
     </div>
-    
-    <div id="status">Siap mengunggah...</div>
-    <div id="result-link"></div>
-    <button class="btn-copy" id="copyBtn">Salin Link</button>
+    <div id="status">Siap...</div>
+</div>
+
+<div class="history-section">
+    <div class="history-title">Riwayat Unggahan</div>
+    <div id="photoGrid" class="grid">
+        </div>
 </div>
 
 <script>
+    const API_KEY = 'bfa6107155cccfcd7e6147a284d656c9';
     const fileInput = document.getElementById('fileInput');
     const status = document.getElementById('status');
-    const resultLink = document.getElementById('result-link');
-    const copyBtn = document.getElementById('copyBtn');
+    const photoGrid = document.getElementById('photoGrid');
 
-    // CATATAN: Gunakan API Key Imgbb Anda sendiri untuk keamanan permanen
-    // Ini adalah kunci publik contoh (bisa kedaluwarsa)
-    const API_KEY = 'bfa6107155cccfcd7e6147a284d656c9'; 
+    // Muat data dari LocalStorage saat halaman dibuka
+    let uploadedPhotos = JSON.parse(localStorage.getItem('arsa_uploads')) || [];
+    renderHistory();
 
     fileInput.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        status.innerText = "Sedang mengunggah... Mohon tunggu.";
+        status.innerText = "Sedang mengunggah ke cloud...";
         status.style.color = "#f39c12";
 
         const formData = new FormData();
@@ -59,26 +69,47 @@
             const data = await response.json();
 
             if (data.success) {
-                const url = data.data.url;
-                status.innerText = "Berhasil Diunggah!";
-                status.style.color = "#27ae60";
-                resultLink.innerText = url;
-                resultLink.style.display = "block";
-                copyBtn.style.display = "inline-block";
-                
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(url);
-                    alert("Link foto berhasil disalin!");
+                const newPhoto = {
+                    url: data.data.url,
+                    thumb: data.data.thumb.url,
+                    id: data.data.id,
+                    time: new Date().toLocaleString()
                 };
-            } else {
-                throw new Error("Gagal mengunggah");
+
+                // Simpan ke daftar
+                uploadedPhotos.unshift(newPhoto);
+                localStorage.setItem('arsa_uploads', JSON.stringify(uploadedPhotos));
+                
+                status.innerText = "Berhasil disimpan!";
+                status.style.color = "#27ae60";
+                renderHistory();
             }
-        } catch (error) {
-            status.innerText = "Gagal mengunggah foto.";
+        } catch (err) {
+            status.innerText = "Error: Gagal koneksi.";
             status.style.color = "#e74c3c";
-            console.error(error);
         }
     };
+
+    function renderHistory() {
+        photoGrid.innerHTML = '';
+        uploadedPhotos.forEach((photo, index) => {
+            const container = document.createElement('div');
+            container.className = 'thumb-container';
+            container.innerHTML = `
+                <img src="${photo.thumb}" title="Diunggah: ${photo.time}" onclick="window.open('${photo.url}', '_blank')">
+                <button class="btn-del" onclick="deletePhoto(${index})">×</button>
+            `;
+            photoGrid.appendChild(container);
+        });
+    }
+
+    window.deletePhoto = (index) => {
+        if(confirm("Hapus dari daftar riwayat? (Foto di server tetap ada)")) {
+            uploadedPhotos.splice(index, 1);
+            localStorage.setItem('arsa_uploads', JSON.stringify(uploadedPhotos));
+            renderHistory();
+        }
+    }
 </script>
 
 </body>
