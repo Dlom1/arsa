@@ -3,125 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arsa Manager - Upload & Gallery</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #1a73e8; text-align: center; }
-        
-        /* Area Upload */
-        .upload-section { border: 2px dashed #1a73e8; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px; position: relative; }
-        .upload-section:hover { background: #f8fbff; }
-        input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        #status { margin-top: 10px; font-weight: bold; color: #555; }
+    <title>Galeri Santri Ar-Risalah</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
 
-        /* Galeri */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        .photo-card { border: 1px solid #eee; border-radius: 10px; overflow: hidden; background: #fff; }
-        .photo-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; }
-        .photo-info { padding: 8px; font-size: 11px; text-align: center; background: #fafafa; border-top: 1px solid #eee; }
+    <style>
+        /* --- 1. Reset & Global Variables --- */
+        :root {
+            --primary-color: #1e293b; /* Deep Navy - Professional */
+            --accent-color: #3b82f6;  /* Bright Blue - Interactive */
+            --bg-color: #f8fafc;      /* Soft White/Gray */
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        /* --- 2. Layout Container --- */
+        .container {
+            max-width: 1280px; /* Lebar cukup untuk 5 kolom */
+            margin: 0 auto;
+        }
+
+        /* --- 3. Header Styling --- */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        /* --- 4. Upload Section (Modern Dropzone) --- */
+        .upload-wrapper {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 30px;
+            margin-bottom: 50px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--border-radius);
+            padding: 40px 20px;
+            position: relative;
+            transition: var(--transition);
+            background-color: #f8fafc;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-color);
+            background-color: #eff6ff;
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-content svg {
+            width: 48px;
+            height: 48px;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            min-height: 24px;
+        }
+
+        /* --- 5. Gallery Grid Layout --- */
+        .gallery-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .gallery-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .gallery-grid {
+            display: grid;
+            /* Grid Logic: Auto-fit dengan min-width, tapi kita atur agar muat 5 di desktop */
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        /* --- 6. Photo Card Styling --- */
+        .photo-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Rasio Gambar 1:1 (Square) atau 4:5 */
+        .image-container {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Ubah ke 4/5 jika ingin potrait */
+            overflow: hidden;
+            background-color: #e2e8f0; /* Placeholder color */
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.08); /* Zoom effect */
+        }
+
+        .photo-info {
+            padding: 12px 15px;
+            background: #fff;
+            border-top: 1px solid #f1f5f9;
+            z-index: 2;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            /* Truncate text jika terlalu panjang */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        /* --- 7. States (Loading & Empty) --- */
+        .state-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+            background: #fff;
+            border-radius: var(--border-radius);
+            border: 1px dashed #cbd5e1;
+        }
+
+        /* --- 8. Responsiveness --- */
+        
+        /* Tablet & Small Laptops */
+        @media (max-width: 1024px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Sekitar 4 kolom */
+                gap: 20px;
+            }
+        }
+
+        /* Mobile Devices */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            
+            .container { padding: 0 10px; }
+            
+            .gallery-grid {
+                /* Paksa 2 kolom di mobile agar rapi */
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 15px;
+            }
+
+            .photo-info { padding: 10px; }
+            .file-name { font-size: 0.8rem; }
+        }
+
+        /* Extra Small Mobile */
+        @media (max-width: 480px) {
+            .upload-wrapper { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Arsa Cloud Manager</h2>
-    
-    <div class="upload-section">
-        <p id="upload-text">Klik atau Taruh Foto untuk Upload ke Repo <strong>arsa</strong></p>
-        <input type="file" id="fileInput" accept="image/*">
-        <div id="status">Pilih file untuk memulai</div>
+    <div class="container">
+        <header>
+            <h1>Berkas Foto Santri Ar-Risalah</h1>
+            <p class="subtitle">Sistem Manajemen Aset Digital & Repositori</p>
+        </header>
+
+        <div class="upload-wrapper">
+            <div class="upload-zone">
+                <input type="file" id="fileInput" accept="image/*">
+                <div class="upload-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <div class="upload-text">Klik atau Seret Foto ke Sini</div>
+                    <div class="upload-subtext">Format didukung: JPG, PNG, WEBP</div>
+                </div>
+            </div>
+            <div id="status"></div>
+        </div>
+
+        <div class="gallery-header">
+            <h2>Galeri Foto</h2>
+        </div>
+
+        <div id="gallery" class="gallery-grid">
+            <div class="state-message">Sedang memuat data dari server...</div>
+        </div>
     </div>
 
-    <hr>
-    <h3>Daftar Foto di Repo</h3>
-    <div id="gallery" class="gallery-grid">
-        </div>
-</div>
+    <script>
+        // --- KONFIGURASI ---
+        const USERNAME = 'Dlom1';
+        const REPO = 'arsa';
+        // PASTE TOKEN ANDA DI BAWAH INI (Ganti teks di dalam kutip)
+        const GITHUB_TOKEN = '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'; 
 
-<script>
-    // KONFIGURASI PENTING
-    const USERNAME = 'Dlom1';
-    const REPO = 'arsa';
-    // Gunakan Fine-grained Token atau Classic Token GitHub Anda di sini
-    // PERINGATAN: Menaruh Token di HTML publik berisiko. Gunakan akun khusus atau Token terbatas.
-    const GITHUB_TOKEN = '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'; 
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const gallery = document.getElementById('gallery');
 
-    const fileInput = document.getElementById('fileInput');
-    const status = document.getElementById('status');
-    const gallery = document.getElementById('gallery');
+        // 1. FUNGSI UPLOAD
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-    // 1. FUNGSI UNTUK UPLOAD KE REPO
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+            // Update UI saat proses
+            status.innerHTML = '<span style="color: var(--accent-color);">Sedang memproses & mengunggah...</span>';
+            
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const content = reader.result.split(',')[1]; 
+                const fileName = file.name.replace(/\s+/g, '_'); // Sanitasi nama file
 
-        status.innerText = "Sedang memproses file...";
-        const reader = new FileReader();
-        
-        reader.onload = async () => {
-            const content = reader.result.split(',')[1]; // Ambil Base64
-            const fileName = file.name.replace(/\s+/g, '_'); // Hapus spasi di nama file
+                try {
+                    const response = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/${fileName}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: `Upload foto: ${fileName}`,
+                            content: content
+                        })
+                    });
 
-            status.innerText = `Mengunggah ${fileName} ke GitHub...`;
-
-            try {
-                const response = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/${fileName}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: `Upload foto: ${fileName} via Web`,
-                        content: content
-                    })
-                });
-
-                if (response.ok) {
-                    status.innerText = "Berhasil masuk ke Repo arsa!";
-                    status.style.color = "green";
-                    setTimeout(() => location.reload(), 2000); // Reload untuk update galeri
-                } else {
-                    const err = await response.json();
-                    status.innerText = "Gagal: " + err.message;
-                    status.style.color = "red";
+                    if (response.ok) {
+                        status.innerHTML = '<span style="color: green;">✔ Berhasil diunggah! Memperbarui galeri...</span>';
+                        setTimeout(() => location.reload(), 1500); 
+                    } else {
+                        const err = await response.json();
+                        status.innerHTML = `<span style="color: red;">✘ Gagal: ${err.message}</span>`;
+                    }
+                } catch (error) {
+                    status.innerHTML = '<span style="color: red;">⚠ Kesalahan Koneksi.</span>';
                 }
-            } catch (error) {
-                status.innerText = "Kesalahan Koneksi.";
-            }
+            };
+            reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
-    };
 
-    // 2. FUNGSI UNTUK MENAMPILKAN DAFTAR FOTO
-    async function loadGallery() {
-        try {
-            const res = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/`);
-            const files = await res.json();
-            
-            const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            const photos = files.filter(f => imageExts.includes(f.name.split('.').pop().toLowerCase()));
+        // 2. FUNGSI LOAD GALERI
+        async function loadGallery() {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/`);
+                const files = await res.json();
+                
+                const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                // Filter hanya gambar
+                const photos = Array.isArray(files) ? files.filter(f => imageExts.includes(f.name.split('.').pop().toLowerCase())) : [];
 
-            gallery.innerHTML = photos.length ? '' : 'Belum ada foto.';
-            
-            photos.forEach(photo => {
-                const imgUrl = `https://${USERNAME}.github.io/${REPO}/${photo.name}`;
-                const card = document.createElement('div');
-                card.className = 'photo-card';
-                card.innerHTML = `
-                    <img src="${imgUrl}" onclick="window.open('${imgUrl}', '_blank')">
-                    <div class="photo-info">${photo.name}</div>
-                `;
-                gallery.appendChild(card);
-            });
-        } catch (e) {
-            gallery.innerHTML = "Gagal memuat daftar foto.";
+                if (photos.length === 0) {
+                    gallery.innerHTML = '<div class="state-message">Belum ada foto yang diunggah.</div>';
+                    return;
+                }
+                
+                // Kosongkan loading message
+                gallery.innerHTML = ''; 
+
+                photos.forEach(photo => {
+                    // Gunakan raw URL atau Pages URL
+                    const imgUrl = `https://${USERNAME}.github.io/${REPO}/${photo.name}`;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    
+                    // Struktur HTML Card Baru
+                    card.innerHTML = `
+                        <div class="image-container">
+                            <img src="${imgUrl}" onclick="window.open('${imgUrl}', '_blank')" alt="${photo.name}" loading="lazy">
+                        </div>
+                        <div class="photo-info">
+                            <span class="file-name" title="${photo.name}">${photo.name}</span>
+                        </div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            } catch (e) {
+                console.error(e);
+                gallery.innerHTML = '<div class="state-message" style="color: red;">Gagal memuat galeri. Periksa koneksi atau Token.</div>';
+            }
         }
-    }
 
-    loadGallery();
-</script>
+        // Jalankan saat halaman siap
+        loadGallery();
+    </script>
 
 </body>
 </html>
