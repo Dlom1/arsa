@@ -3,56 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arsa Repository - Dlom</title>
+    <title>Upload Foto ke Arsa Cloud</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
-        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; width: 80%; max-width: 500px; }
-        .upload-area { border: 2px dashed #007bff; padding: 30px; border-radius: 8px; cursor: pointer; color: #007bff; transition: 0.3s; }
-        .upload-area:hover { background: #e7f1ff; }
-        img { max-width: 100%; margin-top: 20px; border-radius: 8px; display: none; }
-        h1 { color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        h2 { color: #1a73e8; margin-bottom: 20px; }
+        #upload-form { border: 2px dashed #1a73e8; padding: 40px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; position: relative; }
+        #upload-form:hover { background: #f8fbff; }
+        input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        #status { margin-top: 15px; font-weight: bold; color: #555; }
+        #result-link { margin-top: 15px; display: none; word-break: break-all; padding: 10px; background: #e8f0fe; border-radius: 5px; font-size: 14px; }
+        .btn-copy { margin-top: 10px; padding: 8px 15px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Arsa File Viewer</h1>
-    <p>Klik atau seret foto ke kotak di bawah (Preview saja):</p>
-    
-    <div class="upload-area" id="dropzone">
-        Pilih atau Drop Foto di Sini
+<div class="card">
+    <h2>Upload Foto Arsa</h2>
+    <div id="upload-form">
+        <p id="text-prompt">Klik atau Seret Foto ke Sini</p>
+        <input type="file" id="fileInput" accept="image/*">
     </div>
     
-    <img id="preview" src="" alt="Preview Gambar">
-    
-    <hr>
-    <p><small>Catatan: GitHub Pages bersifat statis. Foto yang diupload di sini hanya muncul di browser Anda (tidak tersimpan permanen di server).</small></p>
+    <div id="status">Siap mengunggah...</div>
+    <div id="result-link"></div>
+    <button class="btn-copy" id="copyBtn">Salin Link</button>
 </div>
 
 <script>
-    const dropzone = document.getElementById('dropzone');
-    const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+    const resultLink = document.getElementById('result-link');
+    const copyBtn = document.getElementById('copyBtn');
 
-    dropzone.onclick = () => {
-        let input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = e => { 
-            displayFile(e.target.files[0]);
-        };
-        input.click();
-    };
+    // CATATAN: Gunakan API Key Imgbb Anda sendiri untuk keamanan permanen
+    // Ini adalah kunci publik contoh (bisa kedaluwarsa)
+    const API_KEY = 'bfa6107155cccfcd7e6147a284d656c9'; 
 
-    function displayFile(file) {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        status.innerText = "Sedang mengunggah... Mohon tunggu.";
+        status.style.color = "#f39c12";
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const url = data.data.url;
+                status.innerText = "Berhasil Diunggah!";
+                status.style.color = "#27ae60";
+                resultLink.innerText = url;
+                resultLink.style.display = "block";
+                copyBtn.style.display = "inline-block";
+                
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(url);
+                    alert("Link foto berhasil disalin!");
+                };
+            } else {
+                throw new Error("Gagal mengunggah");
+            }
+        } catch (error) {
+            status.innerText = "Gagal mengunggah foto.";
+            status.style.color = "#e74c3c";
+            console.error(error);
         }
-    }
+    };
 </script>
 
 </body>
